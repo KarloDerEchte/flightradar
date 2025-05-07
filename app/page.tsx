@@ -1,103 +1,74 @@
-import Image from "next/image";
+"use client";
+import { CircleGauge, Mountain, Radar } from "lucide-react";
+import dynamic from "next/dynamic";
+import { useEffect, useMemo, useState } from "react";
 
-export default function Home() {
+export default function Page() {
+  const Map = useMemo(
+    () =>
+      dynamic(() => import("./map"), {
+        loading: () => <p>A map is loading</p>,
+        ssr: false,
+      }),
+    []
+  );
+  const [posix, setPosix] = useState<[number, number]>([51.4, 14.29003]);
+  const [flights, setFlights] = useState([]);
+  useEffect(() => {
+    const fetchData = async () => {
+      const res = await fetch("/flights", {
+        method: "GET",
+        cache: "no-store",
+      });
+      const data = await res.json();
+      setFlights(data.data);
+    };
+
+    fetchData();
+    const interval = setInterval(fetchData, 1000); // Refetch every second
+
+    return () => clearInterval(interval); // Cleanup interval on component unmount
+  }, []);
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+    <>
+      <div className="bg-white-700   w-[100%] h-[100vh] rounded-lg shadow-lg">
+        <Map flights={flights} posix={posix} />
+        <div className="absolute top-0 right-5 z-[10000] h-full py-10  w-[20em]">
+          <div className=" max-h-full h-full rounded-lg">
+            {/* Header */}
+            <div className="border-b p-4 flex h-[4em] border rounded-t-lg bg-[rgb(8,8,8)]  gap-x-4 items-center border-white/20">
+              <Radar className="text-white" />
+              <h1 className="uppercase font-semibold">Active Flights</h1>
+            </div>
+            {/* Flights */}
+            <div className="max-h-[90%] rounded-b-lg bg-[rgb(8,8,8)] border-x border-b border-white/20 overflow-auto">
+              {flights.map((flight: string[], index) => {
+                return (
+                  <div
+                    onClick={() => {
+                      setPosix([parseFloat(flight[7]), parseFloat(flight[8])]);
+                    }}
+                    key={flight[4]}
+                    className={`p-4 ${index !== flights.length - 1 && "border-b"} hover:bg-white/10 cursor-pointer border-white/20 flex flex-col gap-x-4 justify-center`}
+                  >
+                    <h1 className="text-white font-semibold">{flight[4]}</h1>
+                    <div className="flex gap-x-2">
+                      <p className="text-sm text-gray-400 flex items-center gap-x-2">
+                        <CircleGauge size={17} className="inline" />
+                        {flight[9]} knt
+                      </p>
+                      <p className="text-sm text-gray-400 flex items-center gap-x-2">
+                        <Mountain size={17} className="inline" />
+                        {flight[5]} ft
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+    </>
   );
 }
