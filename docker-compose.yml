@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  app:
+    image: python:3.9-slim
+    container_name: flight_app
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: python3 -m http.server 8000
+    ports:
+      - "8000:8000"
+    environment:
+      - ENV_VAR_NAME=value
+      - ANOTHER_ENV_VAR=another_value
